@@ -19,12 +19,12 @@ Unified market data interface for both CEX (e.g., Binance, OKX) and DEX (e.g., U
 
 ### 1.fork repo
 
-fork okx-api-sdk-go to your github
+fork exchange-market to your github
 
 ### 2.clone repo
 
 ```bash
-git@github.com:339-Labs/okx-api-sdk-go.git
+git@github.com:339-Labs/exchange-market.git
 ```
 
 ### 3. create new branch and commit code
