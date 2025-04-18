@@ -18,4 +18,11 @@ const (
 	BiGetApiUrl       = ""
 	BiGetWsUrl        = ""
 	Passphrase        = ""
+
+	// 子账户 kit3
+	OkxApiKey       = ""
+	OkxApiSecretKey = ""
+	OkxApiUrl       = ""
+	OkxWsUrl        = ""
+	OkxPassphrase   = "!"
 )

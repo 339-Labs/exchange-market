@@ -1,13 +1,13 @@
 package bitget
 
 /*
-* ProductType
-USDT-FUTURES USDT专业合约
-COIN-FUTURES 混合合约
-USDC-FUTURES USDC专业合约
-SUSDT-FUTURES USDT专业合约模拟盘
-SCOIN-FUTURES 混合合约模拟盘
-SUSDC-FUTURES USDC专业合约模拟盘
+  - ProductType
+    USDT-FUTURES USDT专业合约
+    COIN-FUTURES 混合合约
+    USDC-FUTURES USDC专业合约
+    SUSDT-FUTURES USDT专业合约模拟盘
+    SCOIN-FUTURES 混合合约模拟盘
+    SUSDC-FUTURES USDC专业合约模拟盘
 */
 type ProductType string
 

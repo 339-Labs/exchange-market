@@ -54,6 +54,7 @@ type BitGetClient interface {
 	SpotTickers(symbol string) (string, error)
 
 	/**                              合约                                 */
+
 	// 获取全部交易对行情
 	AllTickers(productType ProductType) (string, error)
 }

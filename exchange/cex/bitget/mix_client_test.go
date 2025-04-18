@@ -15,7 +15,7 @@ func SetUp() BitGetClient {
 				ApiUrl:       config.BiGetApiUrl,
 				ApiSecretKey: config.BiGetApiSecretKey,
 				WsUrl:        "",
-				Passphrase:   config.Passphrase,
+				Passphrase:   config.BitGetPassphrase,
 				TimeOut:      1000,
 			},
 		},
