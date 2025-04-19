@@ -3,6 +3,8 @@ package config
 type Config struct {
 	HttpServerConfig HttpServerConfig `json:"http_server_config"`
 	DBConfig         DBConfig         `json:"db_config"`
+	SlaveDBConfig    SlaveDBConfig    `json:"slave_db_config"`
+	RedisConfig      RedisConfig      `json:"redis_config"`
 	ExchangeConfig   ExchangeConfig   `json:"exchange_config"`
 }
 
@@ -17,6 +19,20 @@ type DBConfig struct {
 	User string `json:"user"`
 	Pass string `json:"pass"`
 	Name string `json:"name"`
+}
+
+type SlaveDBConfig struct {
+	Host string `json:"host"`
+	Port int    `json:"port"`
+	User string `json:"user"`
+	Pass string `json:"pass"`
+	Name string `json:"name"`
+}
+
+type RedisConfig struct {
+	Address  string `json:"address"`
+	Password string `json:"password"`
+	Username string `json:"username"`
 }
 
 type ExchangeConfig struct {

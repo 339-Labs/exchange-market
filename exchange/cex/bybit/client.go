@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-const CexName = "OKX"
+const CexName = "ByBit"
 
 type Client struct {
 	bybitClient *bybit_connector.Client

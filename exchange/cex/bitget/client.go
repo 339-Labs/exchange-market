@@ -7,6 +7,8 @@ import (
 	v2 "github.com/339-Labs/v3-bitget-api-sdk-go/pkg/client/v2"
 )
 
+const CexName = "BitGet"
+
 type Client struct {
 	bitgetApiClient     *client.BitgetApiClient
 	v2MixAccountClient  *v2.MixAccountClient

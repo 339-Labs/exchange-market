@@ -8,7 +8,7 @@ import (
 	v5 "github.com/339-Labs/okx-api-sdk-go/pkg/client/v5"
 )
 
-const CexName = "OKX"
+const CexName = "Okx"
 
 type Client struct {
 	okxApiClient     *client.OkxApiClient
