@@ -1,38 +1,32 @@
 package bn
 
 import (
-	"context"
+	config2 "github.com/339-Labs/binance-api-sdk-go/config"
+	"github.com/339-Labs/binance-api-sdk-go/pkg/client"
+	"github.com/339-Labs/binance-api-sdk-go/pkg/client/v"
 	"github.com/339-Labs/exchange-market/config"
-	"github.com/binance/binance-connector-go"
-	"log"
+	"github.com/339-Labs/exchange-market/exchange/cex"
 )
 
 const CexName = "BN"
 
 type Client struct {
-	bnClient *binance_connector.Client
+	spotBnClient     *client.BnApiClient
+	mixBnClient      *client.BnApiClient
+	mixMarketClient  *v.MixMarketClient
+	spotMarketClient *v.SpotMarketClient
 }
 
 func NewClient(config config.CexExchangeConfig) (BnClient, error) {
-	client := binance_connector.NewClient(config.ApiKey, config.ApiSecretKey)
-	client.Debug = true
-	client.TimeOffset = -config.TimeOut
+	bnConfig := config2.NewBnConfig(config.ApiKey, config.ApiSecretKey, int(config.TimeOut), "")
 	return &Client{
-		bnClient: client,
+		spotBnClient:     new(client.BnApiClient).Init(bnConfig, string(cex.Spot)),
+		mixBnClient:      new(client.BnApiClient).Init(bnConfig, string(cex.SWAP)),
+		mixMarketClient:  new(v.MixMarketClient).Init(bnConfig),
+		spotMarketClient: new(v.SpotMarketClient).Init(bnConfig),
 	}, nil
 }
 
 type BnClient interface {
-	GetAllCoinsInfoService() ([]*binance_connector.CoinInfo, error)
-}
-
-func (client *Client) GetAllCoinsInfoService() ([]*binance_connector.CoinInfo, error) {
-	ctx := context.Background()
-	rsp, err := client.bnClient.NewGetAllCoinsInfoService().Do(ctx)
-	if err != nil {
-		log.Fatalln("NewGetAllCoinsInfoService fail : ", err)
-		return nil, err
-	}
-	//binance_connector.PrettyPrint(rsp)
-	return rsp, nil
+	MarketDataAPI
 }

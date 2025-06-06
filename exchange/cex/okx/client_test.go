@@ -2,6 +2,7 @@ package okx
 
 import (
 	"github.com/339-Labs/exchange-market/config"
+	"github.com/339-Labs/exchange-market/exchange/cex"
 	"testing"
 )
 
@@ -38,9 +39,19 @@ func TestClient_Ticker(t *testing.T) {
 
 func TestClient_Tickers(t *testing.T) {
 	okx := setUp()
-	tickers, err := okx.Tickers(Spot)
+	tickers, err := okx.Tickers(cex.Spot)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log(tickers)
+}
+
+func TestClient_Mark(t *testing.T) {
+	okx := setUp()
+	rsp, err := okx.MarkPrice(cex.MARGIN, "")
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(rsp)
+
 }

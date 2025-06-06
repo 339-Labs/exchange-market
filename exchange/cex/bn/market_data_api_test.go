@@ -2,6 +2,7 @@ package bn
 
 import (
 	"github.com/339-Labs/exchange-market/config"
+	"github.com/339-Labs/exchange-market/exchange/cex"
 	"testing"
 )
 
@@ -29,7 +30,7 @@ func setUp() BnClient {
 
 func TestClient_GetAllCoinsInfoService(t *testing.T) {
 	bnClient := setUp()
-	rsp, err := bnClient.GetAllCoinsInfoService()
+	rsp, err := bnClient.Tickers(cex.Spot, "")
 	if err != nil {
 		t.Error(err)
 	}
