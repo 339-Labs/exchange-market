@@ -3,8 +3,8 @@ package cex
 /*
 * 产品类型
 SPOT：币币
-MARGIN：币币杠杠
 SWAP：永续合约
+MARGIN：币币杠杠
 FUTURES：交割合约
 OPTION：期权
 */

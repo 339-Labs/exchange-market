@@ -4,7 +4,7 @@ import "testing"
 
 func TestClient_CoinsInfo(t *testing.T) {
 	client := SetUp()
-	coins, err := client.CoinsInfo("")
+	coins, err := client.SymbolsInfo("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -13,7 +13,7 @@ func TestClient_CoinsInfo(t *testing.T) {
 
 func TestClient_SpotSymbols(t *testing.T) {
 	client := SetUp()
-	coins, err := client.SpotSymbols("")
+	coins, err := client.SpotSymbolsInfo("")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,7 +21,7 @@ func TestClient_SpotSymbols(t *testing.T) {
 }
 func TestClient_SpotTicker(t *testing.T) {
 	client := SetUp()
-	rsp, err := client.SpotTickers("")
+	rsp, err := client.SpotLatestPrice("")
 	if err != nil {
 		t.Fatal(err)
 	}

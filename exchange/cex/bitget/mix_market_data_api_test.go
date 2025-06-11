@@ -31,7 +31,7 @@ func SetUp() BitGetClient {
 
 func TestClient_AllTickerss(t *testing.T) {
 	bitgetClient := SetUp()
-	rsp, err := bitgetClient.AllTickers(USDT)
+	rsp, err := bitgetClient.MixLatestPrice(USDT)
 	if err != nil {
 		t.Error(err)
 	}

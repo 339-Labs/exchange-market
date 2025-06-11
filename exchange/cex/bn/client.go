@@ -29,4 +29,5 @@ func NewClient(config config.CexExchangeConfig) (BnClient, error) {
 
 type BnClient interface {
 	MarketDataAPI
+	MixMarketDataAPI
 }

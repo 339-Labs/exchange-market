@@ -47,16 +47,7 @@ func NewClient(config config.CexExchangeConfig) (BitGetClient, error) {
 
 type BitGetClient interface {
 	/**                              现货                                 */
-
-	// 获取币种信息  如不填写，默认返回全部币种信息
-	CoinsInfo(coin string) (string, error)
-	// 如不填写，默认返回全部交易对信息
-	SpotSymbols(symbol string) (string, error)
-	//获取行情信息 如不填写，默认返回全部交易对信息
-	SpotTickers(symbol string) (string, error)
-
+	SpotMarketDataAPI
 	/**                              合约                                 */
-
-	// 获取全部交易对行情
-	AllTickers(productType ProductType) (string, error)
+	MixMarketDataAPI
 }

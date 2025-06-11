@@ -55,4 +55,5 @@ type CexExchangeConfig struct {
 }
 
 type DexExchangeConfig struct {
+	RpcUrl string `json:"rpc_url"`
 }

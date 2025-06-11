@@ -1,7 +1,7 @@
 package bitget
 
 /*
-  - ProductType
+  - ProductType 合约类型
     USDT-FUTURES USDT专业合约
     COIN-FUTURES 混合合约
     USDC-FUTURES USDC专业合约
