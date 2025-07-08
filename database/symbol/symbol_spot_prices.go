@@ -8,6 +8,7 @@ import (
 type SymbolSpotPrices struct {
 	GUID          uuid.UUID `gorm:"primaryKey"`
 	UnifiedSymbol string
+	Symbol        string
 	Price         string
 	Exchange      string
 	Chain         string

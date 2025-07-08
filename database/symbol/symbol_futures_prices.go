@@ -8,6 +8,7 @@ import (
 type SymbolFuturesPrices struct {
 	GUID          uuid.UUID `gorm:"primaryKey"`
 	UnifiedSymbol string
+	Symbol        string
 	Price         string
 	FundingRate   *float64
 	Exchange      string
