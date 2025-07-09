@@ -36,7 +36,7 @@ func (t *BitGetTask) Start() error {
 			select {
 
 			case <-t.ticker.C:
-				// todo  bitget ws data handler, spot and mix
+				// todo  bitget ws data handler, spot and feature
 
 			case <-t.resourceCtx.Done():
 				log.Info("stop bitget task in work")

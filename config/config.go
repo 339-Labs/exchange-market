@@ -50,6 +50,7 @@ type CexExchangeConfig struct {
 	ApiSecretKey string `json:"api_secret_key"`
 	ApiUrl       string `json:"api_url"`
 	WsUrl        string `json:"ws_url"`
+	WsUrlFeature string `json:"ws_url_feature"`
 	Passphrase   string `json:"passphrase"`
 	TimeOut      int64  `json:"timeout"`
 }
