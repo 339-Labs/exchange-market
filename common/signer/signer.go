@@ -33,6 +33,19 @@ func (p *Signer) Sign(params map[string]string) string {
 	return result
 }
 
+func (p *Signer) ByBitSign(apiKey string, timestamp string, body string) string {
+	var payload strings.Builder
+	payload.WriteString(apiKey)
+	payload.WriteString(timestamp)
+	if body != "" && body != "?" {
+		payload.WriteString(body)
+	}
+	hash := hmac.New(sha256.New, p.secretKey)
+	hash.Write([]byte(payload.String()))
+	result := base64.StdEncoding.EncodeToString(hash.Sum(nil))
+	return result
+}
+
 func (p *Signer) BnSign(apiKey string, timestamp string) string {
 	var payload strings.Builder
 	payload.WriteString(apiKey)

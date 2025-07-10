@@ -1,13 +1,14 @@
 package bybit
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/339-Labs/exchange-market/common"
 	"github.com/339-Labs/exchange-market/common/signer"
 	"github.com/339-Labs/exchange-market/common/ws"
 	"github.com/339-Labs/exchange-market/config"
-	"github.com/339-Labs/exchange-market/exchange/cex/bitget/constants"
-	"github.com/339-Labs/exchange-market/exchange/cex/bitget/model"
+	"github.com/339-Labs/exchange-market/exchange/cex/bybit/constants"
+	"github.com/339-Labs/exchange-market/exchange/cex/bybit/model"
 	"github.com/ethereum/go-ethereum/log"
 	"sync"
 	"time"
@@ -24,7 +25,7 @@ type BybitMessageHandler struct {
 	// 消息处理
 	Listener      OnReceive
 	ErrorListener OnReceive
-	ScribeMap     map[model.SubscribeReq]OnReceive
+	ScribeMap     map[string]OnReceive
 	AllSubscribe  *model.Set
 
 	// 同步
@@ -43,7 +44,7 @@ func NewByBitMessageHandler(config *config.CexExchangeConfig, needLogin bool) *B
 		Config:       config,
 		NeedLogin:    needLogin,
 		LoginStatus:  false,
-		ScribeMap:    make(map[model.SubscribeReq]OnReceive),
+		ScribeMap:    make(map[string]OnReceive),
 		AllSubscribe: model.NewSet(),
 		Signer:       new(signer.Signer).Init(config.ApiSecretKey),
 	}
@@ -67,14 +68,14 @@ func (h *BybitMessageHandler) HandleMessage(message string) error {
 	jsonMap := common.JSONToMap(message)
 
 	// 检查是否有错误代码
-	if code, exists := jsonMap["code"]; exists {
-		if codeFloat, ok := code.(float64); ok && int(codeFloat) != 0 {
-			return fmt.Errorf("received error code: %d", int(codeFloat))
+	if success, exists := jsonMap["success"]; exists {
+		if !success.(bool) {
+			return fmt.Errorf("received error msg: %d", message)
 		}
 	}
 
 	// 处理登录响应
-	if event, exists := jsonMap["event"]; exists && event == "login" {
+	if event, exists := jsonMap["op"]; exists && event == "auth" {
 		return h.handleLoginResponse(message)
 	}
 
@@ -125,7 +126,7 @@ func (h *BybitMessageHandler) handleLoginResponse(message string) error {
 
 // handleDataMessage 处理数据消息
 func (h *BybitMessageHandler) handleDataMessage(message string, jsonMap map[string]interface{}) error {
-	listener := h.getListener(jsonMap["arg"])
+	listener := h.getListener(jsonMap["topic"])
 	if listener != nil {
 		listener(message)
 	}
@@ -145,23 +146,13 @@ func (h *BybitMessageHandler) handleOtherMessage(message string) error {
 }
 
 // getListener 获取特定订阅的监听器
-func (h *BybitMessageHandler) getListener(argJson interface{}) OnReceive {
-	if argJson == nil {
+func (h *BybitMessageHandler) getListener(topic interface{}) OnReceive {
+	if topic == nil {
 		return h.Listener
-	}
-
-	mapData, ok := argJson.(map[string]interface{})
-	if !ok {
-		return h.Listener
-	}
-
-	subscribeReq := model.SubscribeReq{
-		Channel: fmt.Sprintf("%v", mapData["channel"]),
-		InstId:  fmt.Sprintf("%v", mapData["instId"]),
 	}
 
 	h.mu.RLock()
-	listener, exists := h.ScribeMap[subscribeReq]
+	listener, exists := h.ScribeMap[topic.(string)]
 	h.mu.RUnlock()
 
 	if !exists {
@@ -179,7 +170,7 @@ func (h *BybitMessageHandler) IsLoggedIn() bool {
 }
 
 // AddSubscription 添加订阅
-func (h *BybitMessageHandler) AddSubscription(req model.SubscribeReq, listener OnReceive) {
+func (h *BybitMessageHandler) AddSubscription(req string, listener OnReceive) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -188,7 +179,7 @@ func (h *BybitMessageHandler) AddSubscription(req model.SubscribeReq, listener O
 }
 
 // RemoveSubscription 移除订阅
-func (h *BybitMessageHandler) RemoveSubscription(req model.SubscribeReq) {
+func (h *BybitMessageHandler) RemoveSubscription(req string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -202,7 +193,7 @@ type ByBitWebSocketClient struct {
 	MessageHandler *BybitMessageHandler
 }
 
-// NewByBitWebSocketClient 创建新的Okx WebSocket客户端
+// NewByBitWebSocketClient 创建新的bybit WebSocket客户端
 func NewByBitWebSocketClient(config *config.CexExchangeConfig, needLogin bool) *ByBitWebSocketClient {
 	// 创建WebSocket配置
 	wsConfig := &ws.ConnectionConfig{
@@ -212,6 +203,7 @@ func NewByBitWebSocketClient(config *config.CexExchangeConfig, needLogin bool) *
 		TimerIntervalSecond: constants.TimerIntervalSecond * time.Second,
 		EnableAutoReconnect: true,
 		EnablePing:          true,
+		PingMsg:             string(json.RawMessage(`{"op":"ping"}`)),
 	}
 
 	// 创建通用WebSocket客户端
@@ -253,18 +245,14 @@ func (h *BybitMessageHandler) Login() error {
 		return fmt.Errorf("WebSocket client is not set")
 	}
 
-	timesStamp := common.TimesStampSec()
-	sign := h.Signer.ParamsSign(constants.WsAuthMethod, constants.WsAuthPath, "", timesStamp)
+	timesStamp := common.TimesStampSec() + common.TimesStampSec()
 
-	loginReq := model.WsLoginReq{
-		ApiKey:     h.Config.ApiKey,
-		Passphrase: h.Config.Passphrase,
-		Timestamp:  timesStamp,
-		Sign:       sign,
-	}
+	sign := h.Signer.ByBitSign(h.Config.ApiSecretKey, timesStamp, "")
 
 	var args []interface{}
-	args = append(args, loginReq)
+	args = append(args, h.Config.ApiKey)
+	args = append(args, timesStamp)
+	args = append(args, sign)
 
 	baseReq := model.WsBaseReq{
 		Op:   constants.WsOpLogin,
@@ -275,13 +263,14 @@ func (h *BybitMessageHandler) Login() error {
 }
 
 // Subscribe 订阅
-func (c *ByBitWebSocketClient) Subscribe(req model.SubscribeReq, listener OnReceive) error {
+func (c *ByBitWebSocketClient) Subscribe(req string, listener OnReceive) error {
+	stream := fmt.Sprintf("tickers.%s", req)
 	// 添加到订阅映射
-	c.MessageHandler.AddSubscription(req, listener)
+	c.MessageHandler.AddSubscription(stream, listener)
 
 	// 发送订阅请求
 	var args []interface{}
-	args = append(args, req)
+	args = append(args, stream)
 
 	baseReq := model.WsBaseReq{
 		Op:   constants.WsOpSubscribe,
@@ -292,15 +281,17 @@ func (c *ByBitWebSocketClient) Subscribe(req model.SubscribeReq, listener OnRece
 }
 
 // SubscribeList 订阅列表
-func (c *ByBitWebSocketClient) SubscribeList(reqs []model.SubscribeReq, listener OnReceive) error {
+func (c *ByBitWebSocketClient) SubscribeList(reqs []string, listener OnReceive) error {
 
 	var args []interface{}
 	for _, req := range reqs {
+
+		stream := fmt.Sprintf("tickers.%s", req)
 		// 添加到订阅映射
-		c.MessageHandler.AddSubscription(req, listener)
+		c.MessageHandler.AddSubscription(stream, listener)
 
 		// 发送订阅请求
-		args = append(args, req)
+		args = append(args, stream)
 	}
 
 	baseReq := model.WsBaseReq{
@@ -312,9 +303,10 @@ func (c *ByBitWebSocketClient) SubscribeList(reqs []model.SubscribeReq, listener
 }
 
 // Unsubscribe 取消订阅
-func (c *ByBitWebSocketClient) Unsubscribe(req model.SubscribeReq) error {
+func (c *ByBitWebSocketClient) Unsubscribe(req string) error {
+	stream := fmt.Sprintf("tickers.%s", req)
 	// 从订阅映射中移除
-	c.MessageHandler.RemoveSubscription(req)
+	c.MessageHandler.RemoveSubscription(stream)
 
 	// 发送取消订阅请求
 	var args []interface{}
@@ -329,11 +321,12 @@ func (c *ByBitWebSocketClient) Unsubscribe(req model.SubscribeReq) error {
 }
 
 // UnsubscribeList  取消订阅
-func (c *ByBitWebSocketClient) UnsubscribeList(req []model.SubscribeReq) error {
+func (c *ByBitWebSocketClient) UnsubscribeList(req []string) error {
+	stream := fmt.Sprintf("tickers.%s", req)
 	var args []interface{}
 	for _, req := range req {
 		// 从订阅映射中移除
-		c.MessageHandler.RemoveSubscription(req)
+		c.MessageHandler.RemoveSubscription(stream)
 		// 发送取消订阅请求
 		args = append(args, req)
 	}

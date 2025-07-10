@@ -2,12 +2,13 @@ package bn
 
 import (
 	"github.com/339-Labs/exchange-market/common"
+	"github.com/339-Labs/exchange-market/common/maps"
 	"github.com/339-Labs/exchange-market/config"
 	"github.com/ethereum/go-ethereum/log"
 	"time"
 )
 
-func ExecuteWsSpot(config *config.CexExchangeConfig) {
+func ExecuteWsSpot(config *config.CexExchangeConfig, spotPriceMap *maps.PriceMap) {
 
 	// 创建WebSocket客户端
 	client := NewBnWebSocketClient(config, false)
@@ -28,7 +29,7 @@ func ExecuteWsSpot(config *config.CexExchangeConfig) {
 					case "kline":
 						log.Info("Kline %s", message)
 					case "24hrMiniTicker":
-						handlerSpot(baseMsg)
+						handlerSpot(baseMsg, spotPriceMap)
 					case "depthUpdate":
 						log.Info("depthUpdate %s", message)
 					case "trade":
@@ -64,7 +65,7 @@ func ExecuteWsSpot(config *config.CexExchangeConfig) {
 
 }
 
-func ExecuteWsFeature(conf *config.CexExchangeConfig) {
+func ExecuteWsFeature(conf *config.CexExchangeConfig, featurePriceMap *maps.PriceMap) {
 
 	// 创建WebSocket客户端
 	cf := &config.CexExchangeConfig{
@@ -90,13 +91,13 @@ func ExecuteWsFeature(conf *config.CexExchangeConfig) {
 					case "kline":
 						log.Info("Kline %s", message)
 					case "24hrMiniTicker":
-						handlerFeature(baseMsg)
+						handlerFeature(baseMsg, featurePriceMap)
 					case "depthUpdate":
 						log.Info("depthUpdate %s", message)
 					case "trade":
 						log.Info("Trade %s", message)
 					case "markPriceUpdate":
-						handlerFeatureMark(baseMsg)
+						handlerFeatureMark(baseMsg, featurePriceMap)
 					default:
 						return
 					}
@@ -136,14 +137,14 @@ func ExecuteWsFeature(conf *config.CexExchangeConfig) {
 
 }
 
-func handlerSpot(spot map[string]interface{}) {
+func handlerSpot(spot map[string]interface{}, spotPriceMap *maps.PriceMap) {
 	log.Info("spot ------ ,instId: %s , lastPr: %s", spot["s"], spot["c"])
 }
 
-func handlerFeature(feature map[string]interface{}) {
+func handlerFeature(feature map[string]interface{}, featurePriceMap *maps.PriceMap) {
 	log.Info("feature ------ ,instId: %s , lastPr: %s , fundingRate: %s", feature["s"], feature["c"])
 }
 
-func handlerFeatureMark(feature map[string]interface{}) {
+func handlerFeatureMark(feature map[string]interface{}, featurePriceMap *maps.PriceMap) {
 	log.Info("feature ------ ,instId: %s , lastPr: %s , fundingRate: %s", feature["s"], feature["p"], feature["r"])
 }

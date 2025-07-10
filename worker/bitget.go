@@ -1,22 +1,26 @@
-package task
+package worker
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/339-Labs/exchange-market/common/maps"
 	"github.com/339-Labs/exchange-market/common/tasks"
 	"github.com/ethereum/go-ethereum/log"
 	"time"
 )
 
 type BitGetTask struct {
-	resourceCtx    context.Context
+	spotPriceMap    *maps.PriceMap
+	featurePriceMap *maps.PriceMap
+	resourceCtx     context.Context
+
 	resourceCancel context.CancelFunc
 	tasks          tasks.Group
 	ticker         *time.Ticker
 }
 
-func NewBitGetTask(cfg *context.Context, shutdown context.CancelCauseFunc, duration time.Duration) (*BitGetTask, error) {
+func NewBitGetTask(cfg *context.Context, shutdown context.CancelCauseFunc, duration time.Duration, spotPriceMap *maps.PriceMap, featurePriceMap *maps.PriceMap) (*BitGetTask, error) {
 	resCtx, resCancel := context.WithCancel(context.Background())
 	return &BitGetTask{
 		resourceCtx:    resCtx,
@@ -24,7 +28,9 @@ func NewBitGetTask(cfg *context.Context, shutdown context.CancelCauseFunc, durat
 		tasks: tasks.Group{HandleCrit: func(err error) {
 			shutdown(fmt.Errorf("bitget ws error "))
 		}},
-		ticker: time.NewTicker(duration),
+		ticker:          time.NewTicker(duration),
+		spotPriceMap:    spotPriceMap,
+		featurePriceMap: featurePriceMap,
 	}, nil
 }
 

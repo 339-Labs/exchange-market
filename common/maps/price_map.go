@@ -32,3 +32,22 @@ func (p *PriceMap) Read(key string) (*PriceData, bool) {
 	val, ok := p.data[key]
 	return val, ok
 }
+
+// 获取所有键
+func (p *PriceMap) GetAllKeys() []string {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	keys := make([]string, 0, len(p.data))
+	for k := range p.data {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+// 获取数据数量
+func (p *PriceMap) Size() int {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	return len(p.data)
+}

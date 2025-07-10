@@ -1,8 +1,8 @@
 package model
 
 type WsLoginBaseReq struct {
-	Op   string       `json:"op"`
-	Args []WsLoginReq `json:"args"`
+	Op   string   `json:"op"`
+	Args []string `json:"args"` // apiKey,timestamp,singature
 }
 
 type WsLoginReq struct {

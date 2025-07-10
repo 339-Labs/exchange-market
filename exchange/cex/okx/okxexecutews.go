@@ -3,13 +3,14 @@ package okx
 import (
 	"fmt"
 	"github.com/339-Labs/exchange-market/common"
+	"github.com/339-Labs/exchange-market/common/maps"
 	"github.com/339-Labs/exchange-market/config"
 	"github.com/339-Labs/exchange-market/exchange/cex/okx/model"
 	"github.com/ethereum/go-ethereum/log"
 	"time"
 )
 
-func ExecuteWs(config *config.CexExchangeConfig) {
+func ExecuteWs(config *config.CexExchangeConfig, spotPriceMap *maps.PriceMap, featurePriceMap *maps.PriceMap) {
 
 	// 创建okx WebSocket客户端
 	client := NewOkxWebSocketClient(config, false) // true表示需要登录
@@ -31,13 +32,13 @@ func ExecuteWs(config *config.CexExchangeConfig) {
 
 				case "tickers":
 					if instType == "SWAP" {
-						handlerFeature(data)
+						handlerFeature(data, featurePriceMap)
 					} else if instType == "SPOT" {
-						handlerSpot(data)
+						handlerSpot(data, spotPriceMap)
 					}
 				case "funding-rate":
 					if instType == "SWAP" {
-						handlerFeatureRate(data)
+						handlerFeatureRate(data, featurePriceMap)
 					}
 				case "mark-price":
 					if instType == "SWAP" {
@@ -98,11 +99,11 @@ func ExecuteWs(config *config.CexExchangeConfig) {
 
 }
 
-func handlerSpot(spot map[string]interface{}) {
+func handlerSpot(spot map[string]interface{}, spotPriceMap *maps.PriceMap) {
 	log.Info("spot ------ ,instId: %s , lastPr: %s", spot["instId"], spot["last"])
 }
 
-func handlerFeature(feature map[string]interface{}) {
+func handlerFeature(feature map[string]interface{}, featurePriceMap *maps.PriceMap) {
 	log.Info("feature ------ ,instId: %s , lastPr: %s ", feature["instId"], feature["last"])
 }
 
@@ -110,6 +111,6 @@ func handlerFeatureMark(feature map[string]interface{}) {
 	log.Info("feature instType: %s ------ ,instId: %s , markPx: %s ", feature["instType"], feature["instId"], feature["markPx"])
 }
 
-func handlerFeatureRate(feature map[string]interface{}) {
+func handlerFeatureRate(feature map[string]interface{}, featurePriceMap *maps.PriceMap) {
 	log.Info("feature ------ ,instId: %s , fundingRate: %s", feature["instId"], feature["fundingRate"])
 }

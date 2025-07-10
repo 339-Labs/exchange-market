@@ -26,7 +26,7 @@ const (
 	 */
 	WsAuthMethod        = "GET"
 	WsAuthPath          = "/user/verify"
-	WsOpLogin           = "login"
+	WsOpLogin           = "auth"
 	WsOpUnsubscribe     = "unsubscribe"
 	WsOpSubscribe       = "subscribe"
 	TimerIntervalSecond = 5

@@ -3,6 +3,7 @@ package bitget
 import (
 	"fmt"
 	"github.com/339-Labs/exchange-market/common"
+	"github.com/339-Labs/exchange-market/common/maps"
 	"github.com/339-Labs/exchange-market/config"
 	"github.com/339-Labs/exchange-market/exchange/cex/bitget/model"
 	"github.com/ethereum/go-ethereum/log"
@@ -10,7 +11,7 @@ import (
 )
 
 // bitget 通过 InstId 来区别现货还是合约 BTC-USDT 和 BTC-USD-SWAP
-func ExecuteWs(config *config.CexExchangeConfig) {
+func ExecuteWs(config *config.CexExchangeConfig, spotPriceMap *maps.PriceMap, featurePriceMap *maps.PriceMap) {
 
 	// 创建bitget WebSocket客户端
 	client := NewBitGetWebSocketClient(config, false) // true表示需要登录
@@ -29,9 +30,9 @@ func ExecuteWs(config *config.CexExchangeConfig) {
 				data := dataList[0].(map[string]interface{})
 
 				if channel == "ticker" && instType == "SPOT" {
-					handlerSpot(data)
+					handlerSpot(data, spotPriceMap)
 				} else if channel == "ticker" && instType == "USDT-FUTURES" {
-					handlerFeature(data)
+					handlerFeature(data, featurePriceMap)
 				}
 
 			}
@@ -88,10 +89,10 @@ func ExecuteWs(config *config.CexExchangeConfig) {
 
 }
 
-func handlerSpot(spot map[string]interface{}) {
+func handlerSpot(spot map[string]interface{}, spotPriceMap *maps.PriceMap) {
 	log.Info("spot ------ ,instId: %s , lastPr: %s", spot["instId"], spot["lastPr"])
 }
 
-func handlerFeature(feature map[string]interface{}) {
+func handlerFeature(feature map[string]interface{}, featurePriceMap *maps.PriceMap) {
 	log.Info("feature ------ ,instId: %s , lastPr: %s , fundingRate: %s", feature["instId"], feature["lastPr"], feature["fundingRate"])
 }

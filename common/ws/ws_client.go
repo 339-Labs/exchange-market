@@ -20,6 +20,7 @@ type MessageHandler interface {
 type ConnectionConfig struct {
 	WsUrl                string
 	PingInterval         time.Duration // ping间隔
+	PingMsg              string
 	ReconnectWaitSecond  float64       // 重连等待时间
 	TimerIntervalSecond  time.Duration // 定时器间隔
 	EnableAutoReconnect  bool          // 是否启用自动重连
@@ -348,7 +349,11 @@ func (c *GenericWebSocketClient) startPing() {
 
 // ping 发送ping消息
 func (c *GenericWebSocketClient) ping() {
-	if err := c.Send("ping"); err != nil {
+	ping := "ping"
+	if c.Config.PingMsg != "" {
+		ping = c.Config.PingMsg
+	}
+	if err := c.Send(ping); err != nil {
 		log.Error("Failed to send ping: %s", err)
 	}
 }
