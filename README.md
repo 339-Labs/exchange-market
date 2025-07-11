@@ -12,9 +12,6 @@ parent:
 Unified market data interface for both CEX (e.g., Binance, OKX) and DEX (e.g., Uniswap).
 
 
-![img.png](img.png)
-
-
 ## Contribute
 
 ### 1.fork repo

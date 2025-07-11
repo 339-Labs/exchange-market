@@ -38,6 +38,18 @@ func NewPriceMap() *PriceMap {
 	}
 }
 
+// 创建新的双buffer价格映射
+func NewDoubleBufferPriceMap(maxBatchSize int, maxWaitTime time.Duration) *PriceMap {
+	return &PriceMap{
+		data:         make(map[string]*PriceData),
+		writeBuffer:  &sync.Map{},
+		readBuffer:   &sync.Map{},
+		maxBatchSize: maxBatchSize,
+		maxWaitTime:  maxWaitTime,
+		done:         make(chan struct{}),
+	}
+}
+
 func (p *PriceMap) Write(key string, value *PriceData) {
 	p.mu.Lock()
 	p.data[key] = value
