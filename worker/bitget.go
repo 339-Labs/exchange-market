@@ -20,7 +20,7 @@ type BitGetTask struct {
 	ticker         *time.Ticker
 }
 
-func NewBitGetTask(cfg *context.Context, shutdown context.CancelCauseFunc, duration time.Duration, spotPriceMap *maps.PriceMap, featurePriceMap *maps.PriceMap) (*BitGetTask, error) {
+func NewBitGetTask(shutdown context.CancelCauseFunc, duration time.Duration, spotPriceMap *maps.PriceMap, featurePriceMap *maps.PriceMap) (*BitGetTask, error) {
 	resCtx, resCancel := context.WithCancel(context.Background())
 	return &BitGetTask{
 		resourceCtx:    resCtx,

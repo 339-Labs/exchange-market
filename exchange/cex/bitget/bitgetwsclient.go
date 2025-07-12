@@ -156,8 +156,9 @@ func (h *BitGetMessageHandler) getListener(argJson interface{}) OnReceive {
 	}
 
 	subscribeReq := model.SubscribeReq{
-		Channel: fmt.Sprintf("%v", mapData["channel"]),
-		InstId:  fmt.Sprintf("%v", mapData["instId"]),
+		Channel:  fmt.Sprintf("%v", mapData["channel"]),
+		InstId:   fmt.Sprintf("%v", mapData["instId"]),
+		InstType: fmt.Sprintf("%v", mapData["instType"]),
 	}
 
 	h.mu.RLock()

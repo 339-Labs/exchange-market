@@ -32,9 +32,9 @@ type PriceMap struct {
 	done chan struct{}
 }
 
-func NewPriceMap() *PriceMap {
+func NewPriceMap(max int) *PriceMap {
 	return &PriceMap{
-		data: make(map[string]*PriceData),
+		data: make(map[string]*PriceData, max),
 	}
 }
 

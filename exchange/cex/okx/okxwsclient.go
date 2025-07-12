@@ -167,7 +167,6 @@ func (h *OkxMessageHandler) getListener(argJson interface{}) OnReceive {
 	if !exists {
 		return h.Listener
 	}
-
 	return listener
 }
 

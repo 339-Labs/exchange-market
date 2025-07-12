@@ -20,7 +20,7 @@ type ByBitTask struct {
 	ticker         *time.Ticker
 }
 
-func NewByBitTask(cfg *context.Context, shutdown context.CancelCauseFunc, duration time.Duration, spotPriceMap *maps.PriceMap, featurePriceMap *maps.PriceMap) (*ByBitTask, error) {
+func NewByBitTask(shutdown context.CancelCauseFunc, duration time.Duration, spotPriceMap *maps.PriceMap, featurePriceMap *maps.PriceMap) (*ByBitTask, error) {
 	resCtx, resCancel := context.WithCancel(context.Background())
 	return &ByBitTask{
 		resourceCtx:    resCtx,

@@ -2,11 +2,15 @@ package constants
 
 const (
 	// 币安WebSocket消息类型
-	StreamTypeKline      = "kline"
-	StreamTypeTicker     = "ticker"
-	StreamTypeDepth      = "depth"
-	StreamTypeTrade      = "trade"
-	StreamTypeBookTicker = "bookTicker"
+	StatusOK            = 200
+	Spot                = "Spot"
+	Feature             = "Feature"
+	EventTicker         = "24hrTicker"        // 交易对详细信息
+	EventMiniTicker     = "24hrMiniTicker"    // 交易对精简信息
+	EventMarkPrice      = "markPriceUpdate"   // 交易对标记价格
+	StreamTickerArr     = "!ticker@arr"       // 交易对详细信息 - 订阅所有交易对
+	StreamMiniTickerArr = "!miniTicker@arr"   // 交易对精简信息 - 订阅所有交易对
+	StreamMarkPriceArr  = "!markPrice@arr@1s" // 交易对标记价格 - 订阅所有交易对
 
 	/*
 	 * http headers

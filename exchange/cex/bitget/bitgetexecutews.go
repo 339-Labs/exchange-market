@@ -10,34 +10,36 @@ import (
 	"time"
 )
 
-// bitget 通过 InstId 来区别现货还是合约 BTC-USDT 和 BTC-USD-SWAP
-func ExecuteWs(config *config.CexExchangeConfig, spotPriceMap *maps.PriceMap, featurePriceMap *maps.PriceMap) {
+type BitGetExClient struct {
+	BitGetWebSocketClient *BitGetWebSocketClient
+	config                *config.CexExchangeConfig
+	spotPriceMap          *maps.PriceMap
+	featurePriceMap       *maps.PriceMap
+}
 
+func NewBitGetExClient(config *config.CexExchangeConfig, spotPriceMap *maps.PriceMap, featurePriceMap *maps.PriceMap) (*BitGetExClient, error) {
 	// 创建bitget WebSocket客户端
 	client := NewBitGetWebSocketClient(config, false) // true表示需要登录
+	return &BitGetExClient{
+		BitGetWebSocketClient: client,
+		config:                config,
+		spotPriceMap:          spotPriceMap,
+		featurePriceMap:       featurePriceMap,
+	}, nil
+}
+
+// bitget 通过 InstId 来区别现货还是合约 BTC-USDT 和 BTC-USD-SWAP
+func (bg *BitGetExClient) ExecuteWs() {
+
+	// 创建bitget WebSocket客户端
+	client := NewBitGetWebSocketClient(bg.config, false) // true表示需要登录
 
 	// 设置全局消息监听器
 	client.SetListeners(
 		func(message string) {
 
-			jsonMap := common.JSONToMap(message)
-			if arg, exists := jsonMap["arg"].(map[string]interface{}); exists {
+			fmt.Println("全局消息: %s\n", message)
 
-				channel, _ := arg["channel"].(string)
-				instType, _ := arg["instType"].(string)
-
-				dataList, _ := jsonMap["data"].([]interface{})
-				data := dataList[0].(map[string]interface{})
-
-				if channel == "ticker" && instType == "SPOT" {
-					handlerSpot(data, spotPriceMap)
-				} else if channel == "ticker" && instType == "USDT-FUTURES" {
-					handlerFeature(data, featurePriceMap)
-				}
-
-			}
-
-			fmt.Printf("收到消息: %s\n", message)
 		},
 		func(message string) {
 			fmt.Printf("收到错误: %s\n", message)
@@ -56,6 +58,8 @@ func ExecuteWs(config *config.CexExchangeConfig, spotPriceMap *maps.PriceMap, fe
 
 	// todo spotSymbols get spot from db
 	var spotSymbols []string
+	spotSymbols = append(spotSymbols, "ETHUSDT")
+	spotSymbols = append(spotSymbols, "BTCUSDT")
 	for _, symbol := range spotSymbols {
 		// 订阅特定现货的数据流
 		subscribeReq := model.SubscribeReq{
@@ -68,6 +72,8 @@ func ExecuteWs(config *config.CexExchangeConfig, spotPriceMap *maps.PriceMap, fe
 
 	// todo spotSymbols get feature from db
 	var featureSymbols []string
+	featureSymbols = append(featureSymbols, "ETHUSDT")
+	featureSymbols = append(featureSymbols, "BTCUSDT")
 	for _, symbol := range featureSymbols {
 		// 订阅特定合约的数据流
 		subscribeReq := model.SubscribeReq{
@@ -80,19 +86,46 @@ func ExecuteWs(config *config.CexExchangeConfig, spotPriceMap *maps.PriceMap, fe
 
 	err := client.SubscribeList(reqs, func(message string) {
 		fmt.Printf("订阅价格更新，处理价格: %s\n", message)
+
+		jsonMap := common.JSONToMap(message)
+		arg, _ := jsonMap["arg"].(map[string]interface{})
+		channel, _ := arg["channel"].(string)
+		instType, _ := arg["instType"].(string)
+
+		if dataList, ok := jsonMap["data"].([]interface{}); ok {
+			data := dataList[0].(map[string]interface{})
+			if channel == "ticker" && instType == "SPOT" {
+				bg.handlerSpot(data)
+			} else if channel == "ticker" && instType == "USDT-FUTURES" {
+				bg.handlerFeature(data)
+			}
+		}
 	})
 
 	if err != nil {
 		log.Error("订阅失败: %v", err)
 	}
 	log.Info("执行")
-
 }
 
-func handlerSpot(spot map[string]interface{}, spotPriceMap *maps.PriceMap) {
+func (bg *BitGetExClient) handlerSpot(spot map[string]interface{}) {
+
 	log.Info("spot ------ ,instId: %s , lastPr: %s", spot["instId"], spot["lastPr"])
+	bg.spotPriceMap.Write(spot["instId"].(string), &maps.PriceData{
+		Symbol:    spot["instId"].(string),
+		Price:     spot["lastPr"].(string),
+		Timestamp: spot["ts"].(string),
+	})
+
 }
 
-func handlerFeature(feature map[string]interface{}, featurePriceMap *maps.PriceMap) {
+func (bg *BitGetExClient) handlerFeature(feature map[string]interface{}) {
 	log.Info("feature ------ ,instId: %s , lastPr: %s , fundingRate: %s", feature["instId"], feature["lastPr"], feature["fundingRate"])
+	bg.featurePriceMap.Write(feature["instId"].(string), &maps.PriceData{
+		Symbol:      feature["instId"].(string),
+		Price:       feature["lastPr"].(string),
+		FundingRate: feature["fundingRate"].(string),
+		MarkPrice:   feature["markPrice"].(string),
+		Timestamp:   feature["ts"].(string),
+	})
 }

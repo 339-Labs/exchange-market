@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/339-Labs/exchange-market/common/retry"
 	"github.com/339-Labs/exchange-market/config"
-	"github.com/339-Labs/okx-api-sdk-go/logging/logger"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/pkg/errors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -17,7 +17,7 @@ type DB struct {
 	gorm *gorm.DB
 }
 
-func NewDB(dbConfig config.DBConfig) (*DB, error) {
+func NewDB(dbConfig *config.DBConfig) (*DB, error) {
 	dsn := fmt.Sprintf("host=%s dbname=%s sslmode=disable", dbConfig.Host, dbConfig.Name)
 	if dbConfig.Port != 0 {
 		dsn += fmt.Sprintf(" port=%d", dbConfig.Port)
@@ -34,7 +34,7 @@ func NewDB(dbConfig config.DBConfig) (*DB, error) {
 		CreateBatchSize:        3_000,
 	}
 
-	logger.Info("db config .. ", dsn)
+	log.Info("db config .. ", dsn)
 	retryStrategy := &retry.ExponentialStrategy{Min: 1000, Max: 20_000, MaxJitter: 250}
 	gorm, err := retry.Do[*gorm.DB](context.Background(), 3, retryStrategy, func() (*gorm.DB, error) {
 		gorm, err := gorm.Open(postgres.Open(dsn), &gromConfig)

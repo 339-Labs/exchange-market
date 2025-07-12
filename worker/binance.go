@@ -20,7 +20,7 @@ type BinanceTask struct {
 	ticker         *time.Ticker
 }
 
-func NewBinanceTask(cfg *context.Context, shutdown context.CancelCauseFunc, duration time.Duration, spotPriceMap *maps.PriceMap, featurePriceMap *maps.PriceMap) (*BinanceTask, error) {
+func NewBinanceTask(shutdown context.CancelCauseFunc, duration time.Duration, spotPriceMap *maps.PriceMap, featurePriceMap *maps.PriceMap, markPriceMap *maps.PriceMap) (*BinanceTask, error) {
 	resCtx, resCancel := context.WithCancel(context.Background())
 	return &BinanceTask{
 		resourceCtx:    resCtx,

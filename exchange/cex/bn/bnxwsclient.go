@@ -1,8 +1,8 @@
 package bn
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/339-Labs/exchange-market/common"
 	"github.com/339-Labs/exchange-market/common/signer"
 	"github.com/339-Labs/exchange-market/common/ws"
 	"github.com/339-Labs/exchange-market/config"
@@ -64,32 +64,76 @@ func (h *BnMessageHandler) SetListeners(msgListener OnReceive, errorListener OnR
 
 // HandleMessage 处理普通消息
 func (h *BnMessageHandler) HandleMessage(message string) error {
-	jsonMap := common.JSONToMap(message)
 
-	// 检查是否有错误
-	if errorCode, exists := jsonMap["code"]; exists {
-		if code, ok := errorCode.(float64); ok && int(code) != 200 {
-			return fmt.Errorf("received error code: %d", int(code))
-		}
+	var v interface{}
+	err := json.Unmarshal([]byte(message), &v)
+	if err != nil {
+		panic(err)
 	}
 
-	// 检查是否有错误
-	if errorCode, exists := jsonMap["status"]; exists {
-		if code, ok := errorCode.(float64); ok && int(code) != 200 {
-			return fmt.Errorf("received error code: %d", int(code))
-		}
-	}
+	switch vv := v.(type) {
+	case map[string]interface{}:
+		fmt.Println("处理对象:", message)
 
-	// 处理订阅确认响应
-	if result, exists := jsonMap["result"]; exists {
-		if result == nil {
-			return h.handleSubscribeResponse(message, jsonMap)
+		// 检查是否有错误
+		if errorCode, exists := vv["code"]; exists {
+			if code, ok := errorCode.(float64); ok && int(code) != 200 {
+				return fmt.Errorf("received error code: %d", int(code))
+			}
 		}
-	}
 
-	// 处理数据消息
-	if stream, exists := jsonMap["stream"]; exists {
-		return h.handleDataMessage(message, stream.(string))
+		// 检查是否有错误
+		if errorCode, exists := vv["status"]; exists {
+			if code, ok := errorCode.(float64); ok && int(code) != 200 {
+				return fmt.Errorf("received error code: %d", int(code))
+			}
+		}
+
+		// 处理订阅确认响应
+		if result, exists := vv["result"]; exists {
+			if result == nil {
+				return h.handleSubscribeResponse(message, vv)
+			}
+		}
+
+		// 处理有 e 的数据消息
+		if e, exists := vv["e"]; exists {
+
+			s, _ := vv["s"]
+			switch e {
+			case constants.EventTicker:
+				stream := fmt.Sprintf("%s@ticker", strings.ToLower(s.(string)))
+				return h.handleDataMessage(message, stream)
+			case constants.EventMiniTicker:
+				stream := fmt.Sprintf("%s@miniTicker", strings.ToLower(s.(string)))
+				return h.handleDataMessage(message, stream)
+			case constants.EventMarkPrice:
+				stream := fmt.Sprintf("%s@markPrice@1s", strings.ToLower(s.(string)))
+				return h.handleDataMessage(message, stream)
+			default:
+				fmt.Println("未知订阅推送 s%", message)
+			}
+		}
+
+	case []interface{}:
+		// 处理数组对象  先断言 vv[0] 是 map[string]interface{}
+		if item, ok := vv[0].(map[string]interface{}); len(vv) > 0 && ok {
+			e := item["e"]
+			switch e {
+			case constants.EventTicker:
+				return h.handleDataMessage(message, constants.StreamTickerArr)
+			case constants.EventMiniTicker:
+				return h.handleDataMessage(message, constants.StreamMiniTickerArr)
+			case constants.EventMarkPrice:
+				return h.handleDataMessage(message, constants.StreamMarkPriceArr)
+			default:
+				fmt.Println("未知订阅推送 s%", message)
+			}
+		} else {
+			fmt.Println("元素不是 map 类型")
+		}
+	default:
+		fmt.Println("未知类型 s%", vv)
 	}
 
 	// 处理其他消息
@@ -323,16 +367,6 @@ func (c *BnWebSocketClient) SubscribeMiniTicker(symbol string, listener OnReceiv
 	return c.Subscribe(stream, listener)
 }
 
-// SubscribeTicker 订阅全市场最新标记价格
-func (c *BnWebSocketClient) SubscribeMarkPriceAll(listener OnReceive) error {
-	return c.Subscribe("!markPrice@arr@1s", listener)
-}
-
-// SubscribeTicker 订阅全场所有交易对 24小时价格变动统计
-func (c *BnWebSocketClient) SubscribeMiniTickerAll(listener OnReceive) error {
-	return c.Subscribe("!miniTicker@arr", listener)
-}
-
 // SubscribeKline 订阅K线数据
 func (c *BnWebSocketClient) SubscribeKline(symbol string, interval string, listener OnReceive) error {
 	stream := fmt.Sprintf("%s@kline_%s", strings.ToLower(symbol), interval)
@@ -351,16 +385,19 @@ func (c *BnWebSocketClient) SubscribeBookTicker(symbol string, listener OnReceiv
 	return c.Subscribe(stream, listener)
 }
 
-// SubscribeAllTicker 订阅所有产品的24小时价格变动统计
+// SubscribeAllTicker 订阅所有产品的详细信息 24小时价格变动统计
 func (c *BnWebSocketClient) SubscribeAllTicker(listener OnReceive) error {
-	stream := "!ticker@arr"
-	return c.Subscribe(stream, listener)
+	return c.Subscribe(constants.StreamTickerArr, listener)
 }
 
-// SubscribeAllBookTicker 订阅所有产品的最优挂单数据
-func (c *BnWebSocketClient) SubscribeAllBookTicker(listener OnReceive) error {
-	stream := "!bookTicker"
-	return c.Subscribe(stream, listener)
+// SubscribeTicker 订阅全场所有交易对精简信息 24小时价格变动统计
+func (c *BnWebSocketClient) SubscribeMiniTickerAll(listener OnReceive) error {
+	return c.Subscribe(constants.StreamMiniTickerArr, listener)
+}
+
+// SubscribeTicker 订阅全市场最新标记价格
+func (c *BnWebSocketClient) SubscribeMarkPriceAll(listener OnReceive) error {
+	return c.Subscribe(constants.StreamMarkPriceArr, listener)
 }
 
 // SetListeners 设置监听器

@@ -10,9 +10,11 @@ import (
 	"time"
 )
 
-type OkxtTask struct {
+type OkxTask struct {
 	spotPriceMap    *maps.PriceMap
 	featurePriceMap *maps.PriceMap
+	markPriceMap    *maps.PriceMap
+	rateMap         *maps.PriceMap
 	resourceCtx     context.Context
 
 	resourceCancel context.CancelFunc
@@ -20,9 +22,9 @@ type OkxtTask struct {
 	ticker         *time.Ticker
 }
 
-func NewOkxTask(cfg *context.Context, shutdown context.CancelCauseFunc, duration time.Duration, spotPriceMap *maps.PriceMap, featurePriceMap *maps.PriceMap) (*OkxtTask, error) {
+func NewOkxTask(shutdown context.CancelCauseFunc, duration time.Duration, spotPriceMap *maps.PriceMap, featurePriceMap *maps.PriceMap, markPriceMap *maps.PriceMap, rateMap *maps.PriceMap) (*OkxTask, error) {
 	resCtx, resCancel := context.WithCancel(context.Background())
-	return &OkxtTask{
+	return &OkxTask{
 		resourceCtx:    resCtx,
 		resourceCancel: resCancel,
 		tasks: tasks.Group{HandleCrit: func(err error) {
@@ -34,7 +36,7 @@ func NewOkxTask(cfg *context.Context, shutdown context.CancelCauseFunc, duration
 	}, nil
 }
 
-func (t *OkxtTask) Start() error {
+func (t *OkxTask) Start() error {
 	log.Info("okx task started")
 	t.tasks.Go(func() error {
 		for {
@@ -55,7 +57,7 @@ func (t *OkxtTask) Start() error {
 	return nil
 }
 
-func (t *OkxtTask) Close() error {
+func (t *OkxTask) Close() error {
 	var result error
 	t.resourceCancel()
 	t.ticker.Stop()

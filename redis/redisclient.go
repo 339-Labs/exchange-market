@@ -11,7 +11,7 @@ type RedisClient struct {
 	rdb *redis.Client
 }
 
-func NewRedisClient(config config.RedisConfig) *RedisClient {
+func NewRedisClient(config config.RedisConfig) (*RedisClient, error) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:        config.Address,
 		Username:    config.Username,
@@ -19,7 +19,7 @@ func NewRedisClient(config config.RedisConfig) *RedisClient {
 		DialTimeout: 5 * time.Second,
 		DB:          0,
 	})
-	return &RedisClient{rdb: rdb}
+	return &RedisClient{rdb: rdb}, nil
 }
 
 func (r *RedisClient) CachePrice(symbol string, price string, ttl time.Duration) error {
