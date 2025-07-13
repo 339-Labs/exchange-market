@@ -9,9 +9,9 @@ import (
 type PriceData struct {
 	Symbol      string `json:"symbol"`
 	Price       string `json:"price"`
-	Timestamp   string `json:"timestamp"`
 	FundingRate string `json:"funding_rate"`
 	MarkPrice   string `json:"mark_price"`
+	Timestamp   string `json:"timestamp"`
 }
 
 type PriceMap struct {

@@ -76,6 +76,19 @@ func JSONToMap(str string) map[string]interface{} {
 	return tempMap
 }
 
+func BytesToMap(bytes []byte) map[string]interface{} {
+
+	var tempMap map[string]interface{}
+
+	err := json.Unmarshal([]byte(bytes), &tempMap)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return tempMap
+}
+
 func JSONToArrMap(str string) []map[string]interface{} {
 	var tempMap []map[string]interface{}
 	err := json.Unmarshal([]byte(str), &tempMap)
